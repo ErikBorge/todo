@@ -1,84 +1,88 @@
-import React, { useEffect, useState, useRef } from "react";
-import { v4 as uuidv4 } from "uuid";
+import React, { useEffect, useState } from "react";
 
-//import APIHelper from "../../util/APIHelper.js";
-import { getTasks, writeTasks, toggleTodo, removeTodo } from "../util/util";
+import TodoList from "./todolist";
+import {
+  createTodoList,
+  getAllTodoLists,
+  sortListsByDateCreated,
+  removeTodoList,
+} from "../util/util";
 
 const Todo = () => {
-  const [todos, setTodos] = useState([]);
-  const [todo, setTodo] = useState("");
-  const inputRef = useRef(false);
+  const [todoLists, setTodoLists] = useState([]);
+  const [newListName, setNewListName] = useState("");
 
   useEffect(() => {
-    //console.log(todo);
-    getTodos();
+    getLists();
   }, []);
 
-  useEffect(() => {
-    console.log("todos", todos);
-    //writeTodos();
-  }, [todos]);
+  // useEffect(() => {
+  //   console.log("current todoLists", todoLists);
+  // }, [todoLists]);
+
+  const getLists = async () => {
+    let allLists = await getAllTodoLists();
+    setTodoLists(sortListsByDateCreated(allLists));
+  };
+
+  const setList = (newList) => {
+    setTodoLists((prev) => {
+      let newLists = [...prev];
+      let index = newLists.findIndex((i) => i.id === newList.id);
+      newLists[index] = newList;
+      return newLists;
+    });
+  };
+
+  const createList = async (name) => {
+    const newList = await createTodoList(name);
+    let newLists = [newList, ...todoLists];
+    setTodoLists(sortListsByDateCreated(newLists));
+    // getLists();
+  };
+
+  const removeList = async (listID) => {
+    await removeTodoList(listID);
+    getLists();
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    //setTodos((prev) => [...prev, { title: todo, done: false }]);
-    let newTodos = [...todos, { id: uuidv4(), title: todo, done: false }];
-    writeTodos(newTodos);
-    setTodo("");
-    inputRef.current.focus();
-  };
-
-  const getTodos = async () => {
-    setTodos(await getTasks());
-  };
-
-  const writeTodos = async (newTodos) => {
-    const responseTodos = await writeTasks(newTodos);
-    setTodos(responseTodos);
-    // getTodos();
-  };
-
-  const toggle = (todo) => {
-    let newTodos = toggleTodo(todos, todo);
-    writeTodos(newTodos);
-  };
-
-  const remove = (todo) => {
-    let newTodos = removeTodo(todos, todo);
-    writeTodos(newTodos);
+    if (newListName && newListName !== "") {
+      createList(newListName);
+      setNewListName("");
+    }
   };
 
   return (
-    <div className="todo">
-      <form onSubmit={handleSubmit}>
-        <input
-          ref={inputRef}
-          type="text"
-          value={todo}
-          onChange={({ target }) => setTodo(target.value)}
-        />
-        <input type="submit" value="add" />
+    <>
+      <form onSubmit={handleSubmit} autoComplete="off">
+        <label>
+          <h2>Add new todo list </h2>
+          <input
+            name="name"
+            type="text"
+            value={newListName}
+            onChange={({ target }) => setNewListName(target.value)}
+          />
+        </label>
+        <input type="submit" value="add list" />
       </form>
-      Todos:
-      {todos.length >= 1 &&
-        todos.map((todo, key) => {
+      {todoLists &&
+        todoLists.map((list) => {
           return (
-            <div key={key}>
-              <li>
-                <input
-                  type="checkbox"
-                  checked={todo.done}
-                  onChange={(e) => {
-                    toggle(todo);
-                  }}
-                />
-                {todo.title}
-                <button onClick={() => remove(todo)}>x</button>
-              </li>
-            </div>
+            <TodoList
+              key={list.id}
+              list={list}
+              setList={setList}
+              listTitle={list.title}
+              listID={list.id}
+              listTodos={list.todos}
+              removeList={removeList}
+            />
           );
         })}
-    </div>
+    </>
   );
 };
 
