@@ -2,28 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 //import APIHelper from "../../util/APIHelper.js";
-import {
-  getTodoList,
-  writeTasksInList,
-  toggleTodo,
-  removeTodo,
-} from "../util/util";
+import { writeTasksInList, toggleTodo, removeTodo } from "../util/util";
 
-const TodoList = ({
-  list,
-  setList,
-  listTitle,
-  listID,
-  listTodos,
-  removeList,
-}) => {
-  const [todoList, setTodoList] = useState(list);
+const TodoList = ({ list, setList, removeList }) => {
   const [todo, setTodo] = useState("");
   const inputRef = useRef(false);
-
-  useEffect(() => {
-    // getTodos();
-  }, [list]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -38,10 +21,10 @@ const TodoList = ({
     }
   };
 
-  const getTodos = async () => {
-    let responseTodos = await getTodoList(list.id);
-    setList((prev) => ({ ...prev, todos: responseTodos }));
-  };
+  // const getTodos = async () => {
+  //   let responseTodos = await getTodoList(list.id);
+  //   setList((prev) => ({ ...prev, todos: responseTodos }));
+  // };
 
   const writeTodos = async (newTodos) => {
     const responseTodos = await writeTasksInList({
